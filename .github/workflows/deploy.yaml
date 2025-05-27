@@ -50,16 +50,6 @@ jobs:
           helm repo update
         continue-on-error: true
 
-      - name: Check Script Existence
-        run: |
-          for script in install-cert-manager.sh install-argocd.sh install-istio.sh; do
-            if [ ! -f ./scripts/$script ]; then
-              echo "::error::Script $script not found in ./scripts/"
-              exit 1
-            fi
-            chmod +x ./scripts/$script
-          done
-
       - name: Install Cert-Manager
         run: |
           bash ./scripts/install-cert-manager.sh
