@@ -5,14 +5,14 @@
 # Description: Enables necessary MicroK8s addons for ArgoCD with Istio and cert-manager
 # -----------------------------------------------------------------------------
 
-"Enabling MicroK8s addons..."
+echo "Enabling MicroK8s addons..."
 microk8s enable helm3
 microk8s enable dns
 microk8s enable cert-manager
 microk8s enable istio
 microk8s enable metallb:104.168.87.74-104.168.87.74 # Replace with your actual MetalLB IP range
 
-"Firewall configuration for MetalLB..."
+echo "Firewall configuration for MetalLB..."
 ufw allow 443/tcp
 ufw allow 80/tcp
 
