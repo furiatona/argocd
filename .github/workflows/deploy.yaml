@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   deploy:
@@ -23,42 +24,66 @@ jobs:
           version: 'v1.30.0'
 
       - name: Set up Helm
-        uses: azure/setup-helm@v3
+        uses: azure/setup-helm@v4
         with:
-          version: v3.12.0
+          version: 'v3.16.2'
 
       - name: Configure Kubeconfig
         run: |
           mkdir -p $HOME/.kube
+          if [ -z "${KUBECONFIG_B64}" ]; then
+            echo "::error::KUBECONFIG_B64 secret is not set"
+            exit 1
+          fi
           echo "${KUBECONFIG_B64}" | base64 -d > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
         env:
           KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
 
+      - name: Verify Kubeconfig
+        run: |
+          kubectl cluster-info || { echo "::error::Failed to connect to Kubernetes cluster"; exit 1; }
+
       - name: Add Helm Repositories
         run: |
-          helm repo add argo https://argoproj.github.io/argo-helm || true
+          helm repo add argo https://argoproj.github.io/argo-helm
           helm repo update
+        continue-on-error: true
+
+      - name: Check Script Existence
+        run: |
+          for script in install-cert-manager.sh install-argocd.sh install-istio.sh; do
+            if [ ! -f ./scripts/$script ]; then
+              echo "::error::Script $script not found in ./scripts/"
+              exit 1
+            fi
+            chmod +x ./scripts/$script
+          done
 
       - name: Install Cert-Manager
         run: |
-          ./scripts/install-cert-manager.sh
+          bash ./scripts/install-cert-manager.sh
+        continue-on-error: false
 
       - name: Deploy ArgoCD
         run: |
-          ./scripts/install-argocd.sh
+          bash ./scripts/install-argocd.sh
+        continue-on-error: false
 
       - name: Deploy Istio Gateway and VirtualService
-        un: |
-          ./scripts/install-argocd.sh
+        run: |
+          bash ./scripts/install-istio.sh
+        continue-on-error: false
 
       - name: Verify Deployments
         run: |
-          kubectl get pods -n argocd -o wide || echo "::warning::Failed to list pods"
-          kubectl get svc -n argocd || echo "::warning::Failed to list services"
-          kubectl get gateway -n argocd || echo "::warning::Failed to list gateways"
-          kubectl get virtualservice -n argocd || echo "::warning::Failed to list virtualservices"
+          kubectl get pods -n argocd -o wide || { echo "::error::Failed to list pods"; exit 1; }
+          kubectl get svc -n argocd || { echo "::error::Failed to list services"; exit 1; }
+          kubectl get gateway -n argocd || { echo "::error::Failed to list gateways"; exit 1; }
+          kubectl get virtualservice -n argocd || { echo "::error::Failed to list virtualservices"; exit 1; }
+        continue-on-error: true
 
       - name: Cleanup
         if: always()
-        run: rm -f $HOME/.kube/config
+        run: |
+          rm -f $HOME/.kube/config
