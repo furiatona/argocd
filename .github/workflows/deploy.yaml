@@ -55,6 +55,13 @@ jobs:
           bash ./scripts/apply-cert-manager-prereqs.sh
         continue-on-error: false
 
+      - name: Copy Cert-Manager to istio
+        run: |
+          kubectl get secret argocd-tls-secret -n argocd -o yaml \
+            | sed 's/namespace: argocd/namespace: istio-system/' \
+            | kubectl apply -f -
+        continue-on-error: false
+        
       - name: Deploy ArgoCD
         run: |
           bash ./scripts/install-argocd.sh
