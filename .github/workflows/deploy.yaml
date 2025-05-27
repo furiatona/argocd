@@ -52,7 +52,7 @@ jobs:
 
       - name: Install Cert-Manager
         run: |
-          bash ./scripts/install-cert-manager.sh
+          bash ./scripts/apply-cert-manager-prereqs.sh
         continue-on-error: false
 
       - name: Deploy ArgoCD
@@ -62,7 +62,7 @@ jobs:
 
       - name: Deploy Istio Gateway and VirtualService
         run: |
-          bash ./scripts/install-istio.sh
+          bash ./scripts/apply-istio-resources.sh
         continue-on-error: false
 
       - name: Verify Deployments
