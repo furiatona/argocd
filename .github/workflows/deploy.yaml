@@ -55,21 +55,19 @@ jobs:
           bash ./scripts/apply-cert-manager-prereqs.sh
         continue-on-error: false
 
+      - name: Verify ArgoCD TLS Secret
+        run: |
+          kubectl get secret argocd-tls-secret -n argocd || { echo "::error::Secret argocd-tls-secret not found in argocd namespace"; exit 1; }
+        continue-on-error: false
+
       - name: Copy Cert-Manager to istio
         run: |
-          if kubectl get secret argocd-tls-secret -n istio-system >/dev/null 2>&1; then
-            echo "Secret argocd-tls-secret already exists in istio-system, updating..."
-            kubectl get secret argocd-tls-secret -n argocd -o yaml \
-              | sed 's/namespace: argocd/namespace: istio-system/' \
-              | kubectl apply --force-conflicts --server-side -f -
-          else
-            echo "Creating secret argocd-tls-secret in istio-system..."
-            kubectl get secret argocd-tls-secret -n argocd -o yaml \
-              | sed 's/namespace: argocd/namespace: istio-system/' \
-              | kubectl apply -f -
-          fi
+          kubectl delete secret argocd-tls-secret -n istio-system --ignore-not-found
+          kubectl get secret argocd-tls-secret -n argocd -o yaml \
+            | sed 's/namespace: argocd/namespace: istio-system/' \
+            | kubectl apply -f -
         continue-on-error: false
-        
+
       - name: Deploy ArgoCD
         run: |
           bash ./scripts/install-argocd.sh
