@@ -7,3 +7,10 @@ gateway:
   targetPort: 8080
   selector:
     istio: ingressgateway
+    
+server:
+  service:
+    ports:
+      - name: http
+        port: 8080
+        targetPort: 8080
