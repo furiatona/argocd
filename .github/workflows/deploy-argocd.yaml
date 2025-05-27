@@ -1,0 +1,77 @@
+name: Deploy ArgoCD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.30.0'
+
+      - name: Set up Helm
+        uses: deliverybot/helm@v1
+        with:
+          version: 'v3.12.0'
+
+      - name: Configure Kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${KUBECONFIG_B64}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+        env:
+          KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
+
+      - name: Add Helm Repositories
+        run: |
+          helm repo add argo https://argoproj.github.io/argo-helm || true
+          helm repo add istio https://istio-release.storage.googleapis.com/charts || true
+          helm repo update
+
+      - name: Deploy ArgoCD
+        run: |
+          helm upgrade --install argocd argo/argo-cd \
+            --namespace argocd \
+            --create-namespace \
+            --set server.extraArgs[0]=--insecure \
+            --set installCRDs=true \
+            --wait \
+            --timeout 5m
+
+      - name: Deploy Istio Gateway and VirtualService
+        run: |
+          if [ ! -d "./charts/argocd-istio" ]; then
+            echo "Error: Helm chart directory ./charts/argocd-istio not found."
+            exit 1
+          fi
+          helm upgrade --install argocd-istio ./charts/argocd-istio \
+            --namespace argocd \
+            --create-namespace \
+            --set domain=${{ secrets.DOMAIN }} \
+            --set argocdPath=${{ secrets.ARGOCD_PATH }} \
+            --wait \
+            --timeout 5m
+
+      - name: Verify Deployments
+        run: |
+          kubectl get pods -n argocd -o wide || echo "::warning::Failed to list pods"
+          kubectl get svc -n argocd || echo "::warning::Failed to list services"
+          kubectl get gateway -n argocd || echo "::warning::Failed to list gateways"
+          kubectl get virtualservice -n argocd || echo "::warning::Failed to list virtualservices"
+
+      - name: Cleanup
+        if: always()
+        run: rm -f $HOME/.kube/config

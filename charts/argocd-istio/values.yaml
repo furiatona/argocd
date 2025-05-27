@@ -1,0 +1,9 @@
+domain: "k8s.aryaduta.co.id"
+argocdPath: "/argocd"
+gateway:
+  name: argocd-gateway
+  namespace: argocd
+  port: 80
+  targetPort: 8080
+  selector:
+    istio: ingressgateway

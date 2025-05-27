@@ -1,0 +1,4 @@
+apiVersion: v2
+name: argocd-istio
+description: Helm chart for ArgoCD Istio Gateway + VirtualService
+version: 0.1.0
