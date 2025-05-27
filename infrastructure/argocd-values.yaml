@@ -1,0 +1,14 @@
+server:
+  insecure: true
+  ingress:
+    enabled: false
+  service:
+    type: ClusterIP
+    annotations:
+      networking.istio.io/service-type: ClusterIP
+  extraArgs:
+    - --insecure
+
+configs:
+  cm:
+    url: https://cd.apps.aryaduta.co.id # Replace with your domain

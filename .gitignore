@@ -1,40 +1,18 @@
-# Helm
 *.tgz
 tmpcharts/
 Chart.lock
-
-# ArgoCD
 .argocd/
-
-# Istio
 *.istio
-
-# Kubernetes backup/temp files
 *.yaml~
 *.yml~
 *.bak
-
-# GitHub Actions logs (if you generate any)
 .github/workflows/*.log
-
-# Environment files
 .env
 .env.*
 .envrc
-
-# Node.js and build artifacts
-node_modules/
-dist/
-build/
-
-# macOS system files
 .DS_Store
-
-# Logs and swap files
 *.log
 *.swp
 *.swo
-
-# IDE/editor folders
 .idea/
 .vscode/

@@ -38,32 +38,19 @@ jobs:
       - name: Add Helm Repositories
         run: |
           helm repo add argo https://argoproj.github.io/argo-helm || true
-          helm repo add istio https://istio-release.storage.googleapis.com/charts || true
           helm repo update
+
+      - name: Install Cert-Manager
+        run: |
+          ./scripts/install-cert-manager.sh
 
       - name: Deploy ArgoCD
         run: |
-          helm upgrade --install argocd argo/argo-cd \
-            --namespace argocd \
-            --create-namespace \
-            --set server.extraArgs[0]=--insecure \
-            --set installCRDs=true \
-            --wait \
-            --timeout 5m
+          ./scripts/install-argocd.sh
 
       - name: Deploy Istio Gateway and VirtualService
-        run: |
-          if [ ! -d "./charts/argocd-istio" ]; then
-            echo "Error: Helm chart directory ./charts/argocd-istio not found."
-            exit 1
-          fi
-          helm upgrade --install argocd-istio ./charts/argocd-istio \
-            --namespace argocd \
-            --create-namespace \
-            --set domain=${{ secrets.DOMAIN }} \
-            --set argocdPath=${{ secrets.ARGOCD_PATH }} \
-            --wait \
-            --timeout 5m
+        un: |
+          ./scripts/install-argocd.sh
 
       - name: Verify Deployments
         run: |
