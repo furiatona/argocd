@@ -10,12 +10,12 @@ A ready-to-use GitOps setup to deploy ArgoCD and expose it via Istio Gateway and
     sudo microk8s status
     ```
 - Configure Cloudflare DNS to point `cd.apps.example.com` to your cluster’s public IP.
-- Open ports **80** and **443** on your server’s firewall for Let’s Encrypt and Istio ingress.
 
 ### 2. Run setup scripts (in order) if running locally
 
 ```sh
-./scripts/install-addons.sh
+./scripts/install-addons.sh # Run this on the MicroK8s server
+# Run locally if your kubeconfig is already set up
 ./scripts/apply-cert-manager-prereqs.sh
 ./scripts/install-argocd.sh
 ./scripts/apply-istio-resources.sh
