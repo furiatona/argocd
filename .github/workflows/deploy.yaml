@@ -57,9 +57,17 @@ jobs:
 
       - name: Copy Cert-Manager to istio
         run: |
-          kubectl get secret argocd-tls-secret -n argocd -o yaml \
-            | sed 's/namespace: argocd/namespace: istio-system/' \
-            | kubectl apply -f -
+          if kubectl get secret argocd-tls-secret -n istio-system >/dev/null 2>&1; then
+            echo "Secret argocd-tls-secret already exists in istio-system, updating..."
+            kubectl get secret argocd-tls-secret -n argocd -o yaml \
+              | sed 's/namespace: argocd/namespace: istio-system/' \
+              | kubectl apply --force-conflicts --server-side -f -
+          else
+            echo "Creating secret argocd-tls-secret in istio-system..."
+            kubectl get secret argocd-tls-secret -n argocd -o yaml \
+              | sed 's/namespace: argocd/namespace: istio-system/' \
+              | kubectl apply -f -
+          fi
         continue-on-error: false
         
       - name: Deploy ArgoCD
