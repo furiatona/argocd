@@ -57,15 +57,7 @@ jobs:
 
       - name: Verify ArgoCD TLS Secret
         run: |
-          kubectl get secret argocd-tls-secret -n argocd || { echo "::error::Secret argocd-tls-secret not found in argocd namespace"; exit 1; }
-        continue-on-error: false
-
-      - name: Copy Cert-Manager to istio
-        run: |
-          kubectl delete secret argocd-tls-secret -n istio-system --ignore-not-found
-          kubectl get secret argocd-tls-secret -n argocd -o yaml \
-            | sed 's/namespace: argocd/namespace: istio-system/' \
-            | kubectl apply -f -
+          kubectl get secret argocd-tls-secret -n istio-system || { echo "::error::Secret argocd-tls-secret not found in istio-system namespace"; exit 1; }
         continue-on-error: false
 
       - name: Deploy ArgoCD
