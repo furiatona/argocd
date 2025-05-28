@@ -13,8 +13,8 @@ kubectl apply -f infrastructure/cert-manager-prereqs.yaml
 
 echo "Verifying ClusterIssuer and Certificate..."
 kubectl get clusterissuer letsencrypt-prod -o wide
-kubectl get certificate -n argocd argocd-cert -o wide
-kubectl get secret -n argocd argocd-tls-secret -o wide
+kubectl get certificate -n istio-system argocd-cert -o wide
+kubectl get secret -n istio-system argocd-tls-secret -o wide
 
 echo "Wait a few minutes for Let's Encrypt to issue the certificate."
-echo "Check certificate status with: kubectl describe certificate -n argocd argocd-cert"
+echo "Check certificate status with: kubectl describe certificate -n istio-system argocd-cert"
