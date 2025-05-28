@@ -10,7 +10,7 @@ helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
 
 echo "Installing ArgoCD..."
-helm install argocd argo/argo-cd \
+helm upgrade --install argocd argo/argo-cd \
   --namespace argocd \
   --values infrastructure/argocd-values.yaml \
   --version 7.6.7 \
