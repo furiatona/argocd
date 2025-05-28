@@ -44,12 +44,6 @@ jobs:
         run: |
           kubectl cluster-info || { echo "::error::Failed to connect to Kubernetes cluster"; exit 1; }
 
-      - name: Add Helm Repositories
-        run: |
-          helm repo add argo https://argoproj.github.io/argo-helm
-          helm repo update
-        continue-on-error: true
-
       - name: Install Cert-Manager
         run: |
           bash ./scripts/apply-cert-manager-prereqs.sh
