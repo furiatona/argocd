@@ -201,7 +201,7 @@ services() {
     echo -e "${YELLOW}Generating services...${NC}"
     TEMPLATE_FILE="$(dirname "$0")/../templates/service.yaml"
     OUTPUT_FILE="${MANIFEST_DIR}/service.yaml"
-     if [[ ! -d "${MANIFEST_DIR}" ]]; then
+    if [[ ! -d "${MANIFEST_DIR}" ]]; then
         mkdir -p "${MANIFEST_DIR}"
     fi
     if [[ -f "${OUTPUT_FILE}" && "${FORCE}" == false ]]; then
@@ -226,6 +226,40 @@ services() {
     fi
 }
 
+deployment() {
+    echo -e "${YELLOW}Deploying application ${APP_NAME}...${NC}"
+    TEMPLATE_FILE="$(dirname "$0")/../templates/app-values.yaml"
+    OUTPUT_FILE="${MANIFEST_DIR}/app-values.yaml"
+    if [[ ! -d "${MANIFEST_DIR}" ]]; then
+        mkdir -p "${MANIFEST_DIR}"
+    fi
+    if [[ -f "${OUTPUT_FILE}" && "${FORCE}" == false ]]; then
+        echo -e "${RED}Output file ${OUTPUT_FILE} already exists. Use --force to overwrite.${NC}"
+        exit 1
+    fi
+    if [[ ! -f "${TEMPLATE_FILE}" ]]; then
+        echo -e "${RED}Template file ${TEMPLATE_FILE} not found.${NC}"
+        exit 1
+    fi
+    export APP_NAME DOMAIN FLAT_DOMAIN
+    envsubst '${APP_NAME} ${DOMAIN} ${FLAT_DOMAIN}' < "${TEMPLATE_FILE}" > "${OUTPUT_FILE}"
+    echo -e "${GREEN}Generated ${OUTPUT_FILE}${NC}"
+
+    echo -e "${YELLOW}Adding ${APP_NAME} Helm repository...${NC}"
+    helm repo add ${APP_REPO_NAME} ${APP_REPO_URL}
+    helm repo update
+
+    echo -e "${YELLOW}Installing ${APP_NAME}...${NC}"
+    helm upgrade --install ${APP_NAME} ${APP_REPO_NAME}/${APP_CHART_NAME} \
+    --namespace ${APP_NAME} \
+    --values ${OUTPUT_FILE} \
+    --version ${APP_CHART_VERSION} \
+    --create-namespace
+
+    echo -e "${YELLOW}Verifying ${APP_NAME} installation...${NC}"
+    kubectl get pods -n ${APP_NAME}
+    kubectl get svc -n ${APP_NAME}
+}
 main() {
     if [[ "${PIPELINE}" == false ]]; then
         prompt_for_variables
@@ -258,5 +292,12 @@ main() {
         echo -e "${RED}Service for '${APP_NAME}' not found. Creating...${NC}"
         services
     fi
+    if helm list -n "${APP_NAME}" | grep -q "^${APP_NAME}\b"; then
+        echo -e "${GREEN}Helm release for '${APP_NAME}' found.${NC}"
+    else
+        echo -e "${RED}Deployment for '${APP_NAME}' not found. Creating...${NC}"
+        deployment
+    fi
+    echo -e "${GREEN}All operations completed successfully.${NC}"
 }
 main "$@"
