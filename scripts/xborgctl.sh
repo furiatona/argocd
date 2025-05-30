@@ -48,7 +48,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-CLUSTER_ISSUER_NAME="letsencrypt"
+CLUSTER_ISSUER_NAME="${CLUSTER_ISSUER_NAME:-letsencrypt}"
+CLUSTER_ISSUER_SERVER="${CLUSTER_ISSUER_SERVER:-https://acme-v02.api.letsencrypt.org/directory}"
 DOMAIN="${DOMAIN:-}"
 EMAIL="${EMAIL:-}"
 APP_NAME="${APP_NAME:-}"
@@ -156,8 +157,8 @@ clusterissuer() {
         echo -e "${RED}Template file ${TEMPLATE_FILE} not found.${NC}"
         exit 1
     fi
-    export CLUSTER_ISSUER_NAME EMAIL
-    envsubst '${CLUSTER_ISSUER_NAME} ${EMAIL}' < "${TEMPLATE_FILE}" > "${OUTPUT_FILE}"
+    export CLUSTER_ISSUER_NAME CLUSTER_ISSUER_SERVER EMAIL
+    envsubst '${CLUSTER_ISSUER_NAME} ${CLUSTER_ISSUER_SERVER} ${EMAIL}' < "${TEMPLATE_FILE}" > "${OUTPUT_FILE}"
     echo -e "${GREEN}Generated ${OUTPUT_FILE}${NC}"
     echo -e "${YELLOW}Applying ClusterIssuer...${NC}"
     kubectl apply -f "${OUTPUT_FILE}"
