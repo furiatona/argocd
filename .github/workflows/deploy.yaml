@@ -44,35 +44,22 @@ jobs:
         run: |
           kubectl cluster-info || { echo "::error::Failed to connect to Kubernetes cluster"; exit 1; }
 
-      - name: Install Cert-Manager
-        run: |
-          bash ./scripts/apply-cert-manager-prereqs.sh
-        continue-on-error: false
-
-      - name: Verify ArgoCD TLS Secret
-        run: |
-          kubectl get secret argocd-tls-secret -n istio-system || { echo "::error::Secret argocd-tls-secret not found in istio-system namespace"; exit 1; }
-        continue-on-error: false
-
       - name: Deploy ArgoCD
         run: |
-          bash ./scripts/install-argocd.sh
+          ./scripts/xborgctl.sh --pipeline
+        env:
+          DOMAIN: ${{ secrets.DOMAIN }}
+          EMAIL: ${{ secrets.EMAIL }}
+          CLUSTER_ISSUER_NAME: ${{ secrets.CLUSTER_ISSUER_NAME }}
+          CLUSTER_ISSUER_SERVER: ${{ secrets.CLUSTER_ISSUER_SERVER }}
+          APP_NAME: ${{ vars.APP_NAME }}
+          APP_REPO_NAME: ${{ vars.APP_REPO_NAME }}
+          APP_CHART_NAME: ${{ vars.APP_CHART_NAME }}
+          APP_CHART_VERSION: ${{ vars.APP_CHART_VERSION }}
+          APP_REPO_URL: ${{ vars.APP_REPO_URL }}
         continue-on-error: false
-
-      - name: Deploy Istio Gateway and VirtualService
-        run: |
-          bash ./scripts/apply-istio-resources.sh
-        continue-on-error: false
-
-      - name: Verify Deployments
-        run: |
-          kubectl get pods -n argocd -o wide || { echo "::error::Failed to list pods"; exit 1; }
-          kubectl get svc -n argocd || { echo "::error::Failed to list services"; exit 1; }
-          kubectl get gateway -n argocd || { echo "::error::Failed to list gateways"; exit 1; }
-          kubectl get virtualservice -n argocd || { echo "::error::Failed to list virtualservices"; exit 1; }
-        continue-on-error: true
 
       - name: Cleanup
         if: always()
         run: |
-          rm -f $HOME/.kube/config
+          rm -rf $HOME/.kube/config cert-manager manifests

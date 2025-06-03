@@ -11,4 +11,4 @@ server:
 
 configs:
   cm:
-    url: https://cd.apps.aryaduta.co.id # Replace with your domain
+    url: https://${DOMAIN}

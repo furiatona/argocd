@@ -5,20 +5,16 @@ A ready-to-use GitOps setup to deploy ArgoCD and expose it via Istio Gateway and
 
 ### 1. Prepare the Environment
 
-- Ensure MicroK8s is installed and running:
+- Copy example env
     ```sh
-    sudo microk8s status
+    cp env.sample .env
     ```
-- Configure Cloudflare DNS to point `cd.apps.example.com` to your cluster’s public IP.
+- Configure Cloudflare DNS to point `cd.apps.example.com` to your cluster’s public IP or Load Balancer.
 
-### 2. Run setup scripts (in order) if running locally
+### 2. Run setup scripts if running locally
 
 ```sh
-./scripts/install-addons.sh # Run this on the MicroK8s server
-# Run locally if your kubeconfig is already set up
-./scripts/apply-cert-manager-prereqs.sh
-./scripts/install-argocd.sh
-./scripts/apply-istio-resources.sh
+./scripts/xborgctl --local
 ```
 
 ### 3. Access ArgoCD

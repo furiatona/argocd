@@ -2,8 +2,8 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: argocd-gateway
-  namespace: argocd
+  name: ${APP_NAME}-gateway
+  namespace: ${APP_NAME}
 spec:
   selector:
     istio: ingressgateway
@@ -13,26 +13,26 @@ spec:
       name: https
       protocol: HTTPS
     hosts:
-    - cd.apps.aryaduta.co.id
+    - ${DOMAIN}
     tls:
       mode: SIMPLE
-      credentialName: argocd-tls-secret
+      credentialName: ${FLAT_DOMAIN}-tls-secret
 
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: argocd-vs
-  namespace: argocd
+  name: ${APP_NAME}-vs
+  namespace: ${APP_NAME}
 spec:
   hosts:
-  - cd.apps.aryaduta.co.id
+  - ${DOMAIN}
   gateways:
-  - argocd-gateway
+  - ${APP_NAME}-gateway
   http:
   - route:
     - destination:
-        host: argocd-server
+        host: ${APP_NAME}-server
         port:
           number: 80
     headers:
