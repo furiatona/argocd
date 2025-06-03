@@ -42,8 +42,9 @@ jobs:
 
       - name: Verify Kubeconfig
         run: |
-          kubectl cluster-info || { echo "::error::Failed to connect to Kubernetes cluster"; exit 1; }
-
+            kubectl cluster-info > /dev/null 2>&1 || { echo "::error::Failed to connect to Kubernetes cluster"; exit 1; }
+            echo "Successfully connected to Kubernetes cluster"
+            
       - name: Deploy ArgoCD
         run: |
           ./scripts/xborgctl.sh --pipeline
